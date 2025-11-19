@@ -1,29 +1,6 @@
 # README.md
 # Tech Interview – Global Search API Challenge
 
-SolutionName/
-├── README.md
-├── SolutionName.sln
-├── src/
-│   ├── AirportsService/
-│   │   ├── AirportsService.csproj
-│   │   ├── Program.cs
-│   │   ├── appsettings.json
-│   │   └── Controllers/
-│   │       └── AirportsController.cs
-│   ├── FlightsService/
-│   │   ├── FlightsService.csproj
-│   │   ├── Program.cs
-│   │   ├── appsettings.json
-│   │   └── Protos/
-│   │       └── flights.proto
-│   └── GlobalSearch/   # progetto vuoto lasciato al candidato
-│       ├── GlobalSearch.csproj
-│       └── Program.cs
-└── tests/
-    └── PlaceholderTests/
-        └── PlaceholderTests.csproj
-
 ## Contesto
 Questa solution contiene due microservizi .NET 8 (Aspire):
 
