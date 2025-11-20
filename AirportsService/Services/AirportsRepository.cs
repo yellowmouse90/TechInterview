@@ -2,7 +2,13 @@ using AirportsService.Models;
 
 namespace AirportsService.Services;
 
-public class AirportsRepository
+public interface IAirportsRepository
+{
+    Task<PagedList<Airport>> GetPagedAsync(int offset, int limit);
+    Task<Airport?> GetAsync(string id);
+}
+
+public class AirportsRepository : IAirportsRepository
 {
     private readonly List<Airport> _airports;
     private static readonly Random Rand = new();
@@ -12,13 +18,16 @@ public class AirportsRepository
         _airports = GenerateMockAirports(300);
     }
 
-    public IEnumerable<Airport> GetPaged(int offset, int limit)
-        => _airports
+    public Task<PagedList<Airport>> GetPagedAsync(int offset, int limit)
+    {
+        return Task.FromResult(new PagedList<Airport>(_airports
             .Skip(offset)
-            .Take(limit);
+            .Take(limit), _airports.Count));
+    }
 
-    public int Count => _airports.Count;
-
+    public Task<Airport?> GetAsync(string id)
+        => Task.FromResult(_airports.SingleOrDefault(x=>string.Equals(x.Id, id, StringComparison.CurrentCultureIgnoreCase)));
+    
     private static List<Airport> GenerateMockAirports(int count)
     {
         string[] cities = { "Milano", "Roma", "Firenze", "Parigi", "Londra", "Madrid", "Berlino", "New York", "Singapore", "Tokyo", "Los Angeles", "Chicago" };

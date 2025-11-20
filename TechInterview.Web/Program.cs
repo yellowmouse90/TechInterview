@@ -18,6 +18,10 @@ builder.Services.AddGrpcClient<Flights.FlightsClient>("flights-grpc", o =>
 {
     o.Address = new("http://flightsservice");
 });
+builder.Services.AddHttpClient("airports", client =>
+{
+    client.BaseAddress = new Uri("https+http://airportsservice");
+});
 
 builder.Services.AddHttpClient<WeatherApiClient>(client =>
 {

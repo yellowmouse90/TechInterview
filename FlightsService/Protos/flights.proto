@@ -29,7 +29,16 @@ message GetFlightsResponse {
   int32 totalCount = 4;
 }
 
+message GetFlightByIdRequest {
+  string id = 1;
+}
+
+message GetFlightByIdResponse {
+  Flight flight = 1;
+}
+
 // -------- SERVICE --------
 service Flights {
   rpc GetFlights (GetFlightsRequest) returns (GetFlightsResponse);
+  rpc GetFlightById (GetFlightByIdRequest) returns (GetFlightByIdResponse);
 }

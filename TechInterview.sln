@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11205.157 d18.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechInterview.AppHost", "TechInterview.AppHost\TechInterview.AppHost.csproj", "{30E216CB-D3C7-4E52-B667-53F824EA5A06}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechInterview.ServiceDefaults", "TechInterview.ServiceDefaults\TechInterview.ServiceDefaults.csproj", "{3675D019-8408-4628-A5A4-70A3DCD9FD12}"
@@ -42,5 +45,11 @@ Global
 		{66DD7A00-3EC6-4DE0-88C1-023F58E1D962}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66DD7A00-3EC6-4DE0-88C1-023F58E1D962}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66DD7A00-3EC6-4DE0-88C1-023F58E1D962}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1B431748-7183-479F-A72D-59E55D81A794}
 	EndGlobalSection
 EndGlobal

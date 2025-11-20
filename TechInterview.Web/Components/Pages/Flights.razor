@@ -1,4 +1,7 @@
 @page "/flights"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.WebUtilities
+@inject NavigationManager Nav
 @inject FlightsService.Grpc.Flights.FlightsClient FlightsClient
 
 <h3>Flights</h3>
@@ -25,7 +28,11 @@
                 @foreach (var f in _flights)
                 {
                     <tr>
-                        <td>@f.Id</td>
+                        <td>
+                            <NavLink href="@($"/flights/{f.Id}")">
+                                @f.Id
+                            </NavLink>
+                        </td>
                         <td>@f.AircraftNumber</td>
                         <td>@f.DepartureCity (@f.DepartureAirportCode)</td>
                         <td>@f.ArrivalCity (@f.ArrivalAirportCode)</td>
@@ -38,7 +45,7 @@
 
         <div class="d-flex justify-content-between mt-3">
             <button class="btn btn-primary" @onclick="PreviousPage" disabled="@(_offset == 0)">Previous</button>
-            <button class="btn btn-primary" @onclick="NextPage" >Next</button>
+            <button class="btn btn-primary" @onclick="NextPage">Next</button>
         </div>
 
         <p class="mt-2 text-muted">
@@ -49,14 +56,27 @@
 
 @code {
     private List<FlightsService.Grpc.Flight>? _flights;
+
     private int _offset = 0;
     private int _limit = 20;
-
     private int TotalCount = 0;
 
     protected override async Task OnInitializedAsync()
     {
+        ReadQueryParams();
         await LoadFlights();
+    }
+
+    private void ReadQueryParams()
+    {
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+
+        if (query.TryGetValue("offset", out var offStr) && int.TryParse(offStr, out var off))
+            _offset = off;
+
+        if (query.TryGetValue("limit", out var limStr) && int.TryParse(limStr, out var lim))
+            _limit = lim;
     }
 
     private async Task LoadFlights()
@@ -76,16 +96,20 @@
     private async Task NextPage()
     {
         _offset += _limit;
+        UpdateUrl();
         await LoadFlights();
     }
 
     private async Task PreviousPage()
     {
-        if (_offset >= _limit)
-            _offset -= _limit;
-        else
-            _offset = 0;
-
+        _offset = Math.Max(0, _offset - _limit);
+        UpdateUrl();
         await LoadFlights();
+    }
+
+    private void UpdateUrl()
+    {
+        var url = $"/flights?offset={_offset}&limit={_limit}";
+        Nav.NavigateTo(url, replace: true);  // evita di riempire la history
     }
 }

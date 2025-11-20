@@ -47,6 +47,29 @@ namespace FlightsService.Services
             return Task.FromResult(response);
         }
 
+        public override Task<GetFlightByIdResponse> GetFlightById(GetFlightByIdRequest request, ServerCallContext context)
+        {
+            var flight = _flights.FirstOrDefault(f => f.Id == request.Id);
+
+            if (flight == null)
+                throw new RpcException(new Status(StatusCode.NotFound, $"Flight {request.Id} not found"));
+
+            return Task.FromResult(new GetFlightByIdResponse
+            {
+                Flight = new Grpc.Flight
+                {
+                    Id = flight.Id,
+                    AircraftNumber = flight.AircraftNumber,
+                    DepartureAirportCode = flight.DepartureAirportCode,
+                    ArrivalAirportCode = flight.ArrivalAirportCode,
+                    DepartureCity = flight.DepartureCity,
+                    ArrivalCity = flight.ArrivalCity,
+                    DepartureTime = flight.DepartureTime.ToString("o"),
+                    ArrivalTime = flight.ArrivalTime.ToString("o")
+                }
+            });
+        }
+
         private static List<FlightsService.Models.Flight> GenerateMockFlights(int count)
         {
             string[] cities = { "Milano", "Roma", "Firenze", "Parigi", "Londra", "Madrid", "Berlino", "New York", "Singapore", "Tokyo" };

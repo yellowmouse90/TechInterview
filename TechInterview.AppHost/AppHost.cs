@@ -1,6 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddProject<Projects.AirportsService>("airportsservice");
+var airports = builder.AddProject<Projects.AirportsService>("airportsservice");
 
 var flights = builder.AddProject<Projects.FlightsService>("flightsservice");
 
@@ -13,6 +13,8 @@ builder.AddProject<Projects.TechInterview_Web>("webfrontend")
     .WithReference(apiService)
     .WaitFor(apiService)
     .WithReference(flights)
-    .WaitFor(flights);
+    .WaitFor(flights)
+    .WithReference(airports)
+    .WaitFor(airports);
 
 builder.Build().Run();
