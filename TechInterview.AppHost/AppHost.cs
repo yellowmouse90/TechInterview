@@ -1,6 +1,12 @@
+using Aspire.Hosting;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
-var airports = builder.AddProject<Projects.AirportsService>("airportsservice");
+var airports = builder.AddProject<Projects.AirportsService>("airportsservice").WithUrlForEndpoint("scalar", url =>
+{
+    url.Url = "/scalar"; // Appends to the existing host and port
+    url.DisplayText = "Scalar UI (HTTPS)";
+});
 
 var flights = builder.AddProject<Projects.FlightsService>("flightsservice");
 
