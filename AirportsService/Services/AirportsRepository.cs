@@ -18,11 +18,12 @@ public class AirportsRepository : IAirportsRepository
         _airports = GenerateMockAirports(300);
     }
 
-    public Task<PagedList<Airport>> GetPagedAsync(int offset, int limit)
+    public async Task<PagedList<Airport>> GetPagedAsync(int offset, int limit)
     {
-        return Task.FromResult(new PagedList<Airport>(_airports
+        await Task.Delay(TimeSpan.FromMilliseconds(100 + 50 * limit));
+        return new PagedList<Airport>(_airports
             .Skip(offset)
-            .Take(limit), _airports.Count));
+            .Take(limit), _airports.Count);
     }
 
     public Task<Airport?> GetAsync(string id)

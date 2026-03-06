@@ -10,16 +10,18 @@ namespace FlightsService.Services
 
         public FlightsServiceImpl()
         {
-
             _flights = GenerateMockFlights(1000);
         }
 
-        public override Task<GetFlightsResponse> GetFlights(GetFlightsRequest request, ServerCallContext context)
+        public override async Task<GetFlightsResponse> GetFlights(GetFlightsRequest request, ServerCallContext context)
         {
             int offset = Math.Max(request.Offset, 0);
             int limit = request.Limit <= 0 ? 50 : request.Limit;
             limit = Math.Min(limit, 100);
 
+            
+            await Task.Delay(TimeSpan.FromMilliseconds(100 + 50 * limit));
+            
             var paged = _flights
                 .Skip(offset)
                 .Take(limit)
@@ -44,7 +46,7 @@ namespace FlightsService.Services
                 ArrivalTime = f.ArrivalTime.ToString("o")
             }));
 
-            return Task.FromResult(response);
+            return response;
         }
 
         public override Task<GetFlightByIdResponse> GetFlightById(GetFlightByIdRequest request, ServerCallContext context)
