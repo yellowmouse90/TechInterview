@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechInterview.AppHost", "Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechInterview.ServiceDefaults", "TechInterview.ServiceDefaults\TechInterview.ServiceDefaults.csproj", "{3675D019-8408-4628-A5A4-70A3DCD9FD12}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechInterview.ApiService", "TechInterview.ApiService\TechInterview.ApiService.csproj", "{43A152A5-A1BD-48C1-8305-170FAF5F1B37}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechInterview.Web", "TechInterview.Web\TechInterview.Web.csproj", "{19F11664-B6B8-4165-8C4E-C53E71C4A348}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlightsService", "FlightsService\FlightsService.csproj", "{6E768C2D-4666-4938-9DCD-D5D2527C5976}"
@@ -34,10 +32,6 @@ Global
 		{3675D019-8408-4628-A5A4-70A3DCD9FD12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3675D019-8408-4628-A5A4-70A3DCD9FD12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3675D019-8408-4628-A5A4-70A3DCD9FD12}.Release|Any CPU.Build.0 = Release|Any CPU
-		{43A152A5-A1BD-48C1-8305-170FAF5F1B37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{43A152A5-A1BD-48C1-8305-170FAF5F1B37}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{43A152A5-A1BD-48C1-8305-170FAF5F1B37}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{43A152A5-A1BD-48C1-8305-170FAF5F1B37}.Release|Any CPU.Build.0 = Release|Any CPU
 		{19F11664-B6B8-4165-8C4E-C53E71C4A348}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{19F11664-B6B8-4165-8C4E-C53E71C4A348}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19F11664-B6B8-4165-8C4E-C53E71C4A348}.Release|Any CPU.ActiveCfg = Release|Any CPU

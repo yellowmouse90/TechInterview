@@ -13,7 +13,6 @@
     <ItemGroup>
         <ProjectReference Include="..\AirportsService\AirportsService.csproj" />
         <ProjectReference Include="..\FlightsService\FlightsService.csproj" />
-        <ProjectReference Include="..\TechInterview.ApiService\TechInterview.ApiService.csproj" />
         <ProjectReference Include="..\TechInterview.Web\TechInterview.Web.csproj" />
     </ItemGroup>
 
