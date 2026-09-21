@@ -1,4 +1,5 @@
 using AirportsService.Models;
+using TechInterview.SeedMock;
 
 namespace AirportsService.Services;
 
@@ -11,11 +12,10 @@ public interface IAirportsRepository
 public class AirportsRepository : IAirportsRepository
 {
     private readonly List<Airport> _airports;
-    private static readonly Random Rand = new();
 
     public AirportsRepository()
     {
-        _airports = GenerateMockAirports(300);
+        _airports = BuildAirports();
     }
 
     public async Task<PagedList<Airport>> GetPagedAsync(int offset, int limit)
@@ -28,28 +28,19 @@ public class AirportsRepository : IAirportsRepository
 
     public Task<Airport?> GetAsync(string id)
         => Task.FromResult(_airports.SingleOrDefault(x=>string.Equals(x.Id, id, StringComparison.CurrentCultureIgnoreCase)));
-    
-    private static List<Airport> GenerateMockAirports(int count)
-    {
-        string[] cities = { "Milano", "Roma", "Firenze", "Parigi", "Londra", "Madrid", "Berlino", "New York", "Singapore", "Tokyo", "Los Angeles", "Chicago" };
-        string[] countries = { "Italy", "France", "UK", "Spain", "Germany", "USA", "Singapore", "Japan" };
 
-        var list = new List<Airport>();
-
-        for (int i = 0; i < count; i++)
-        {
-            var city = cities[Rand.Next(cities.Length)];
-            var country = countries[Rand.Next(countries.Length)];
-
-            list.Add(new Airport
+    /// <summary>
+    /// Proietta il catalogo condiviso (TechInterview.SeedMock) sul modello di dominio:
+    /// l'Id è il codice IATA, la stessa chiave con cui i voli referenziano gli aeroporti.
+    /// </summary>
+    private static List<Airport> BuildAirports() =>
+        AirportSeedCatalog.All
+            .Select(seed => new Airport
             {
-                Id = $"AP{i:D4}",
-                Name = $"{city} International Airport {i}",
-                City = city,
-                Country = country
-            });
-        }
-
-        return list;
-    }
+                Id = seed.Code,
+                Name = seed.Name,
+                City = seed.City,
+                Country = seed.Country
+            })
+            .ToList();
 }

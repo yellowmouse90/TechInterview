@@ -11,13 +11,16 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Protobuf Include="Protos\flights.proto" GrpcServices="Client"/>
+      <!-- Contratto unico: il .proto è quello di FlightsService, referenziato qui come link
+           (nessuna copia da tenere allineata a mano). -->
+      <Protobuf Include="..\FlightsService\Protos\flights.proto" GrpcServices="Client" Link="Protos\flights.proto" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Google.Protobuf" Version="3.33.1" />
-      <PackageReference Include="Grpc.AspNetCore.Server.ClientFactory" Version="2.71.0" />
-      <PackageReference Include="Grpc.Tools" Version="2.76.0">
+      <PackageReference Include="Google.Protobuf" Version="3.36.2" />
+      <PackageReference Include="Grpc.AspNetCore.Server.ClientFactory" Version="2.84.0" />
+      <!-- Vedi FlightsService.csproj: 2.84.0 e' la prima versione con protoc universal per macOS. -->
+      <PackageReference Include="Grpc.Tools" Version="2.84.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>

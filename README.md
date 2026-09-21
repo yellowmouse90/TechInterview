@@ -2,7 +2,7 @@
 # Tech Interview – Global Search API Challenge
 
 ## Contesto
-Questa solution contiene due microservizi .NET 8 (Aspire):
+Questa solution contiene due microservizi .NET 10 (Aspire):
 
 1. **Aeroporti Service**  
    - Espone API **REST**.  
@@ -13,6 +13,25 @@ Questa solution contiene due microservizi .NET 8 (Aspire):
    - Gestisce operazioni **CRUD** sui voli.
 
 Questi due sistemi rappresentano due fonti dati separate. I rispettivi contratti e modelli sono disponibili all’interno della solution.
+
+I dati mock di entrambi i domini sono costruiti sopra il catalogo condiviso **TechInterview.SeedMock** (aeroporti e compagnie): il codice IATA dell'aeroporto è la chiave con cui i voli referenziano gli aeroporti.
+
+---
+
+## Prerequisiti ed esecuzione
+La solution è cross-platform: gira su macOS (Intel e Apple Silicon), Windows e Linux con il solo **SDK .NET 10**.
+
+```bash
+dotnet dev-certs https --trust     # una volta sola, su macOS e Windows
+dotnet restore
+dotnet run --project TechInterview.AppHost
+```
+
+L'AppHost Aspire stampa in console l'URL di login del dashboard, da cui si raggiungono i due servizi.
+
+> La code generation gRPC richiede `Grpc.Tools >= 2.84.0`, la prima versione che include un `protoc`
+> universal per macOS (arm64 + x64). Con le versioni precedenti il build su Apple Silicon fallisce con
+> `Bad CPU type in executable`, a meno di installare Rosetta.
 
 ---
 

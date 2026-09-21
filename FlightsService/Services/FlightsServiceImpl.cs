@@ -1,17 +1,34 @@
 using FlightsService.Grpc;
 using Grpc.Core;
+using TechInterview.SeedMock;
 
 namespace FlightsService.Services
 {
     public class FlightsServiceImpl : Flights.FlightsBase
     {
-        private readonly List<FlightsService.Models.Flight> _flights;
-        private static readonly Random Rand = new();
+        private const int FlightsCount = 1000;
+        private const int ScheduleWindowDays = 30;
+        private const double CruiseSpeedKmh = 800;
+        private const int GroundTimeMinutes = 25;
 
-        public FlightsServiceImpl()
-        {
-            _flights = GenerateMockFlights(1000);
-        }
+        /// <summary>Sotto questa distanza si viaggia in treno: nessun collegamento aereo di linea.</summary>
+        private const double MinRouteDistanceKm = 300;
+
+        /// <summary>Oltre questa distanza la tratta è considerata long haul (solo tra hub).</summary>
+        private const double LongHaulThresholdKm = 4500;
+
+        /// <summary>Raggio massimo operabile senza scalo: oltre, la tratta non è realistica.</summary>
+        private const double MaxNonstopRangeKm = 15000;
+
+        /// <summary>Seed fisso: lo stesso dataset a ogni avvio, così i risultati sono ripetibili.</summary>
+        private static readonly Random Rand = new(20250921);
+
+        /// <summary>
+        /// Il dataset è statico perché le implementazioni gRPC vengono istanziate
+        /// a ogni chiamata: con un campo di istanza ogni richiesta avrebbe visto
+        /// voli diversi (paginazione e GetFlightById incoerenti tra loro).
+        /// </summary>
+        private static readonly List<FlightsService.Models.Flight> _flights = GenerateMockFlights(FlightsCount);
 
         public override async Task<GetFlightsResponse> GetFlights(GetFlightsRequest request, ServerCallContext context)
         {
@@ -72,33 +89,82 @@ namespace FlightsService.Services
             });
         }
 
+        /// <summary>
+        /// Costruisce la schedulazione mock sopra il catalogo condiviso
+        /// (TechInterview.SeedMock): aeroporti e compagnie non sono definiti qui,
+        /// così i codici aeroporto dei voli esistono sempre in AirportsService.
+        /// </summary>
         private static List<FlightsService.Models.Flight> GenerateMockFlights(int count)
         {
-            string[] cities = { "Milano", "Roma", "Firenze", "Parigi", "Londra", "Madrid", "Berlino", "New York", "Singapore", "Tokyo" };
-            string[] airports = { "MXP", "FCO", "FLR", "CDG", "LHR", "MAD", "BER", "JFK", "SIN", "HND" };
-            string[] aircrafts = { "A320", "A330", "A350", "B737", "B747", "B777", "B787" };
+            var airports = AirportSeedCatalog.All;
+            var flights = new List<FlightsService.Models.Flight>(count);
+            var usedFlightCodes = new HashSet<string>(StringComparer.Ordinal);
 
-            var flights = new List<FlightsService.Models.Flight>();
+            // I voli partono dalla mezzanotte UTC di oggi e coprono la finestra di schedulazione.
+            var scheduleStart = DateTime.UtcNow.Date;
 
-            for (int i = 0; i < count; i++)
+            while (flights.Count < count)
             {
-                var depIndex = Rand.Next(cities.Length);
-                var arrIndex = Rand.Next(cities.Length);
+                var departure = airports[Rand.Next(airports.Count)];
+                var arrival = airports[Rand.Next(airports.Count)];
+
+                if (!IsPlausibleRoute(departure, arrival, out var distanceKm))
+                    continue;
+
+                var airline = AirlineSeedCatalog.ForCountry(departure.Country);
+                var flightCode = $"{airline.Code}{Rand.Next(100, 10000)}";
+                if (!usedFlightCodes.Add(flightCode))
+                    continue;
+
+                // Orari allineati a 5 minuti, come una schedulazione reale.
+                var departureTime = scheduleStart.AddMinutes(5 * Rand.Next(0, ScheduleWindowDays * 24 * 12));
 
                 flights.Add(new FlightsService.Models.Flight
                 {
-                    Id = $"FL{i:D4}",
-                    AircraftNumber = aircrafts[Rand.Next(aircrafts.Length)],
-                    DepartureAirportCode = airports[depIndex],
-                    ArrivalAirportCode = airports[arrIndex],
-                    DepartureCity = cities[depIndex],
-                    ArrivalCity = cities[arrIndex],
-                    DepartureTime = DateTime.UtcNow.AddMinutes(Rand.Next(0, 20000)),
-                    ArrivalTime = DateTime.UtcNow.AddMinutes(Rand.Next(20000, 40000))
+                    Id = flightCode,
+                    AircraftNumber = AircraftRegistration.Build(airline, Rand),
+                    DepartureAirportCode = departure.Code,
+                    ArrivalAirportCode = arrival.Code,
+                    DepartureCity = departure.City,
+                    ArrivalCity = arrival.City,
+                    DepartureTime = departureTime,
+                    ArrivalTime = departureTime.AddMinutes(BlockTimeMinutes(distanceKm))
                 });
             }
 
-            return flights;
+            // Ordine stabile per orario di partenza: la paginazione è ripetibile e leggibile.
+            return flights
+                .OrderBy(f => f.DepartureTime)
+                .ThenBy(f => f.Id, StringComparer.Ordinal)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Scarta le tratte che nella realtà non esistono: stessa città (es. MXP -> LIN),
+        /// distanze troppo brevi (es. TSF -> VRN), distanze oltre il raggio di un nonstop
+        /// (es. SYD -> LIS) e long haul da o per aeroporti non hub (es. CTA -> SYD).
+        /// </summary>
+        private static bool IsPlausibleRoute(AirportSeed departure, AirportSeed arrival, out double distanceKm)
+        {
+            distanceKm = Geo.DistanceKm(departure, arrival);
+
+            if (string.Equals(departure.City, arrival.City, StringComparison.Ordinal))
+                return false;
+
+            if (distanceKm < MinRouteDistanceKm || distanceKm > MaxNonstopRangeKm)
+                return false;
+
+            return distanceKm <= LongHaulThresholdKm || (departure.IsHub && arrival.IsHub);
+        }
+
+        /// <summary>
+        /// Durata del volo derivata dalla distanza: rullaggio/salita/discesa più
+        /// crociera a velocità costante, arrotondata a 5 minuti.
+        /// </summary>
+        private static int BlockTimeMinutes(double distanceKm)
+        {
+            var minutes = GroundTimeMinutes + distanceKm / CruiseSpeedKmh * 60;
+            return (int)(Math.Ceiling(minutes / 5) * 5);
         }
     }
 }
