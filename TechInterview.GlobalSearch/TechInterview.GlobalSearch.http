@@ -1,0 +1,28 @@
+@GlobalSearch_HostAddress = http://localhost:5180
+
+### Ricerca valida: prima l'aeroporto MXP, poi i voli da/per MXP
+GET {{GlobalSearch_HostAddress}}/api/global-search?query=mxp&offset=0&limit=10
+Accept: application/json
+
+### Seconda pagina della stessa ricerca: totalCount invariato
+GET {{GlobalSearch_HostAddress}}/api/global-search?query=mxp&offset=10&limit=10
+Accept: application/json
+
+### Query troppo corta: 400
+GET {{GlobalSearch_HostAddress}}/api/global-search?query=ab
+Accept: application/json
+
+### Query con spazi: dopo il trim ha 2 caratteri, 400
+GET {{GlobalSearch_HostAddress}}/api/global-search?query=%20%20ab%20
+Accept: application/json
+
+### Limit oltre il massimo: troncato a 100
+GET {{GlobalSearch_HostAddress}}/api/global-search?query=milano&limit=500
+Accept: application/json
+
+### Accenti: "münchen" trova MUC (città "Munchen" nel catalogo)
+GET {{GlobalSearch_HostAddress}}/api/global-search?query=m%C3%BCnchen
+Accept: application/json
+
+### Readiness: Unhealthy finché l'indice non è caricato
+GET {{GlobalSearch_HostAddress}}/health

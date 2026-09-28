@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TechInterview.ServiceDefaults\TechInterview.ServiceDefaults.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Contratto unico: il .proto è quello di FlightsService, referenziato qui come link
+           (nessuna copia da tenere allineata a mano). -->
+    <Protobuf Include="..\FlightsService\Protos\flights.proto" GrpcServices="Client" Link="Protos\flights.proto" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.AspNetCore.Server.ClientFactory" />
+    <!-- Vedi FlightsService.csproj: 2.84.0 e' la prima versione con protoc universal per macOS. -->
+    <PackageReference Include="Grpc.Tools">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+  </ItemGroup>
+</Project>

@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AirportsService\AirportsService.csproj" />
     <ProjectReference Include="..\FlightsService\FlightsService.csproj" />
+    <ProjectReference Include="..\TechInterview.GlobalSearch\TechInterview.GlobalSearch.csproj" />
     <ProjectReference Include="..\TechInterview.Web\TechInterview.Web.csproj" />
   </ItemGroup>
 </Project>
