@@ -1,86 +1,149 @@
 @page "/Search"
+@* Senza prerender la ricerca parte una volta sola, quando la pagina è già interattiva. *@
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject IHttpClientFactory ClientFactory
+@inject NavigationManager Nav
+@inject ILogger<Search> Logger
+
+<PageTitle>Search</PageTitle>
+
 <h3>Search</h3>
 
-<div class="mb-3">
+<form class="mb-3" @onsubmit="OnSearch" @onsubmit:preventDefault>
     <label for="searchKey" class="form-label">Chiave di ricerca</label>
-    <input id="searchKey"
-           class="form-control"
-           @bind="SearchKey"
-           @bind:event="oninput" />
-</div>
+    <div class="input-group">
+        <input id="searchKey"
+               class="form-control"
+               placeholder="Aeroporto: codice, nome, città, nazione. Volo: codice, aeromobile, città o aeroporto"
+               @bind="SearchKey" />
+        <button class="btn btn-primary" type="submit">Cerca</button>
+    </div>
+    <div class="form-text">Almeno @MinQueryLength caratteri.</div>
+</form>
 
-<button class="btn btn-primary mb-3" @onclick="OnSearch">
-    Cerca
-</button>
-
-@if (IsSearching)
+@if (_errorMessage is not null)
 {
-    <p>Ricerca in corso...</p>
+    <div class="alert alert-warning">@_errorMessage</div>
 }
-else if (Results is { Count: > 0 })
+else if (_isSearching)
 {
-    <table class="table table-striped">
+    <p><em>Ricerca in corso...</em></p>
+}
+else if (_result is { Items.Count: > 0 })
+{
+    <table class="table table-striped table-hover">
         <thead>
             <tr>
-                <th>#</th>
-                <th>Valore</th>
+                <th>Tipo</th>
+                <th>Descrizione</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var (item, index) in Results.Select((value, i) => (value, i + 1)))
+            @foreach (var item in _result.Items)
             {
                 <tr>
-                    <td>@index</td>
-                    <td>@item</td>
+                    <td>@(item.ResourceType == "airport" ? "Aeroporto" : "Volo")</td>
+                    <td><NavLink href="@DetailUrl(item)">@item.Description</NavLink></td>
                 </tr>
             }
         </tbody>
     </table>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <a class="btn btn-primary @(_result.Offset > 0 ? "" : "disabled")"
+           href="@PageUrl(Query!, Math.Max(0, _result.Offset - PageSize))">Previous</a>
+        <span class="text-muted">
+            Risultati @(_result.Offset + 1)–@(_result.Offset + _result.Count) di @_result.TotalCount
+        </span>
+        <a class="btn btn-primary @(_result.Offset + _result.Count < _result.TotalCount ? "" : "disabled")"
+           href="@PageUrl(Query!, _result.Offset + PageSize)">Next</a>
+    </div>
 }
-else if (HasSearched)
+else if (_result is not null)
 {
     <p>Nessun risultato trovato.</p>
 }
 
 @code {
+    private const int MinQueryLength = 3;
+    private const int PageSize = 10;
+
+    // La ricerca vive nell'URL: Previous/Next sono semplici link e il Back del dettaglio torna qui.
+    [SupplyParameterFromQuery]
+    public string? Query { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int Offset { get; set; }
+
     // Testo inserito nel textbox
     private string SearchKey { get; set; } = string.Empty;
 
-    // Risultati della ricerca
-    private List<string> Results { get; set; } = new();
+    private GlobalSearchResponse? _result;
+    private bool _isSearching;
+    private string? _errorMessage;
 
-    // Flag per mostrare messaggi di stato
-    private bool IsSearching { get; set; }
-    private bool HasSearched { get; set; }
-
-    private async Task OnSearch()
+    protected override async Task OnParametersSetAsync()
     {
-        HasSearched = false;
-        IsSearching = true;
-        Results.Clear();
+        SearchKey = Query ?? string.Empty;
+        _result = null;
+        _errorMessage = null;
 
-        // Simula un'operazione asincrona (es. chiamata a un servizio/DB)
-        await Task.Delay(500);
+        if (string.IsNullOrWhiteSpace(Query))
+            return;
 
-        // Logica di esempio: filtra da una lista fittizia
-        var data = new List<string>
+        // Query troppo corta: nessuna chiamata all'API.
+        if (Query.Trim().Length < MinQueryLength)
         {
-            "Apple",
-            "Banana",
-            "Cherry",
-            "Date",
-            "Grapes",
-            "Pineapple"
-        };
-
-        if (!string.IsNullOrWhiteSpace(SearchKey))
-        {
-            Results = data
-                .Where(x => x.Contains(SearchKey, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            _errorMessage = $"Inserisci almeno {MinQueryLength} caratteri.";
+            return;
         }
 
-        IsSearching = false;
-        HasSearched = true;
+        _isSearching = true;
+
+        try
+        {
+            var client = ClientFactory.CreateClient("globalsearch");
+            _result = await client.GetFromJsonAsync<GlobalSearchResponse>(
+                $"/api/global-search?query={Uri.EscapeDataString(Query)}&offset={Offset}&limit={PageSize}");
+        }
+        catch (Exception ex)
+        {
+            // Il Web non aspetta globalsearch: può essere in avvio, o con l'indice ancora in caricamento (503).
+            Logger.LogWarning(ex, "Global search request failed");
+            _errorMessage = "La ricerca non è disponibile: riprova tra qualche secondo.";
+        }
+        finally
+        {
+            _isSearching = false;
+        }
+    }
+
+    private void OnSearch() => Nav.NavigateTo(PageUrl(SearchKey.Trim(), 0));
+
+    private static string PageUrl(string query, int offset) =>
+        $"/search?query={Uri.EscapeDataString(query)}&offset={offset}";
+
+    // Il dettaglio riceve la pagina corrente come returnUrl: il suo pulsante Back torna qui.
+    private string DetailUrl(GlobalSearchItem item)
+    {
+        var detail = item.ResourceType == "airport" ? "/airports/" : "/flights/";
+        var returnUrl = PageUrl(Query!, _result!.Offset);
+
+        return $"{detail}{Uri.EscapeDataString(item.Id)}?returnUrl={Uri.EscapeDataString(returnUrl)}";
+    }
+
+    public class GlobalSearchItem
+    {
+        public string Id { get; set; } = string.Empty;
+        public string ResourceType { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+
+    public class GlobalSearchResponse
+    {
+        public List<GlobalSearchItem> Items { get; set; } = new();
+        public int Offset { get; set; }
+        public int Count { get; set; }
+        public int TotalCount { get; set; }
     }
 }

@@ -22,6 +22,10 @@ builder.Services.AddHttpClient("airports", client =>
 {
     client.BaseAddress = new Uri("https+http://airportsservice");
 });
+builder.Services.AddHttpClient("globalsearch", client =>
+{
+    client.BaseAddress = new Uri("https+http://globalsearch");
+});
 
 var app = builder.Build();
 

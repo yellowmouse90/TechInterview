@@ -38,6 +38,9 @@ else
 @code {
     [Parameter] public string? Id { get; set; }
 
+    // Pagina di provenienza, es. la ricerca: il pulsante Back ci ritorna.
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+
     private FlightsService.Grpc.Flight? _flight;
 
     protected override async Task OnParametersSetAsync()
@@ -55,6 +58,7 @@ else
 
     private void GoBack()
     {
-        Nav.NavigateTo("/flights");
+        // Torna alla pagina di provenienza se nota (es. la ricerca), altrimenti alla lista
+        Nav.NavigateTo(LocalUrl.IsLocal(ReturnUrl) ? ReturnUrl : "/flights");
     }
 }

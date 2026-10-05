@@ -41,6 +41,9 @@ else
 @code {
     [Parameter] public string? Id { get; set; }
 
+    // Pagina di provenienza, es. la ricerca: il pulsante Back ci ritorna.
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+
     private AirportDto? _airport;
 
     protected override async Task OnParametersSetAsync()
@@ -55,8 +58,8 @@ else
 
     private void GoBack()
     {
-        // Torna semplicemente alla lista (offset/limit saranno ripristinati da query param)
-        Nav.NavigateTo("/airports");
+        // Torna alla pagina di provenienza se nota (es. la ricerca), altrimenti alla lista
+        Nav.NavigateTo(LocalUrl.IsLocal(ReturnUrl) ? ReturnUrl : "/airports");
     }
 
     public class AirportDto
